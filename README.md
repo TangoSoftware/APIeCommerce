@@ -201,7 +201,11 @@ Un GET sin resultados responde **200** con la lista vacía:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [],
   "PagingError": null,
   "OrderError": null,
@@ -259,7 +263,9 @@ Ejemplo del cuerpo de un **400** por datos inválidos (orden enviada sin `Custom
 ```json
 {
   "errors": {
-    "Customer.Email": [ "The Email field is required." ]
+    "Customer.Email": [
+      "The Email field is required."
+    ]
   }
 }
 ```
@@ -392,8 +398,16 @@ El cuerpo contiene una lista de órdenes (con el mismo formato que el [POST Orde
 ```json
 {
   "OrderBatch": [
-    { "OrderID": "1", "OrderNumber": "1", "...": "..." },
-    { "OrderID": "2", "OrderNumber": "2", "...": "..." }
+    {
+      "OrderID": "1",
+      "OrderNumber": "1",
+      "...": "..."
+    },
+    {
+      "OrderID": "2",
+      "OrderNumber": "2",
+      "...": "..."
+    }
   ]
 }
 ```
@@ -408,8 +422,16 @@ El número **máximo de órdenes por lote es 25**. Un lote inválido se rechaza 
   "OrderError": null,
   "succeeded": true,
   "Data": [
-    { "OrderID": "1,3", "Processed": true, "ValidationException": null },
-    { "OrderID": "2", "Processed": false, "ValidationException": "ApertureValidationException: ..." }
+    {
+      "OrderID": "1,3",
+      "Processed": true,
+      "ValidationException": null
+    },
+    {
+      "OrderID": "2",
+      "Processed": false,
+      "ValidationException": "ApertureValidationException: ..."
+    }
   ]
 }
 ```
@@ -806,7 +828,11 @@ Los códigos disponibles dependen de la configuración de formas de cobro de Tan
     "DeliversMonday": "S"
   },
   "CashPayments": [
-    { "PaymentID": 38566912, "PaymentMethod": "A02", "PaymentTotal": 423.0 }
+    {
+      "PaymentID": 38566912,
+      "PaymentMethod": "A02",
+      "PaymentTotal": 423.0
+    }
   ],
   "Payments": [
     {
@@ -951,7 +977,11 @@ En este caso se informa `Shipping.ShippingCode` y no hace falta completar el res
     }
   ],
   "CashPayments": [
-    { "PaymentID": 38566912, "PaymentMethod": "A02", "PaymentTotal": 7700.0 }
+    {
+      "PaymentID": 38566912,
+      "PaymentMethod": "A02",
+      "PaymentTotal": 7700.0
+    }
   ],
   "Payments": []
 }
@@ -972,7 +1002,7 @@ Los recursos GET permiten consultar datos de **Tango Gestión** o **Tango Punto 
 GET https://{llave}.connect.axoft.com/api/eCommerce/Product?PageNumber=1&PageSize=100
 ```
 
-**Sincronización incremental:** varios recursos aceptan un parámetro de fecha (`UpdatedDate`, `DatePrice`, `LastUpdate`) para obtener sólo los registros **creados o modificados** desde esa fecha. En `Customer` y `Product`, la comparación contra la fecha de alta es a nivel **día**: un corte con hora incluye también los registros dados de alta ese mismo día (la fecha de alta se registra sin hora). Los registros **sin fecha de alta ni de modificación** (datos históricos de Tango) no se devuelven al filtrar por `UpdatedDate`, cualquiera sea el corte; para obtenerlos, consulte el recurso sin ese parámetro.
+**Sincronización incremental:** varios recursos aceptan un parámetro de fecha (`UpdatedDate`, `DatePrice`, `LastUpdate`) para obtener sólo los registros **creados o modificados** desde esa fecha. En `Customer` y `Product`, la comparación contra la fecha de alta es a nivel **día**: un corte con hora incluye también los registros dados de alta ese mismo día (la fecha de alta se registra sin hora). Los registros **sin fecha de alta ni de modificación** (datos históricos de Tango) no se devuelven al filtrar por `UpdatedDate`, cualquiera sea el corte; para obtenerlos, consulte el recurso sin ese parámetro. Envíe la fecha **sin designador de zona** (sin `Z` ni desplazamiento): la API convierte a UTC los valores con zona y el corte deja de coincidir con la hora local registrada.
 
 **Filtro `filter`:** todos los GET aceptan el parámetro `filter`. **Prefiera los filtros nombrados de cada recurso**; el operador de cada filtro se indica en la tabla de parámetros del recurso cuando no es la búsqueda exacta.
 
@@ -1035,7 +1065,11 @@ Con `IncludeInvoices=true`, cada orden incluye los datos del comprobante:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "OrderId": "75906",
@@ -1061,7 +1095,11 @@ Si alguno de los `OrderId` consultados no existe, el detalle vuelve en `OrderErr
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [ /* órdenes encontradas */ ],
   "PagingError": null,
   "Message": null,
@@ -1097,7 +1135,11 @@ Devuelve la relación entre cada orden y el comprobante electrónico asociado al
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "OrderID": "75906",
@@ -1138,7 +1180,11 @@ Relación entre el artículo de la tienda y el artículo de Tango.
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "ProductCode": "203",
@@ -1173,16 +1219,30 @@ _Recuerde:_ `ProvinceCode` es el código AFIP de la provincia (ver [Provincias](
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "Id": 1,
       "StoreNumber": 1,
       "Description": "CASA CENTRAL",
-      "Street": "", "Number": "", "Floor": "", "Apartment": "", "Tower": "", "Block": "",
-      "City": "", "PostalCode": "", "ProvinceCode": "0",
-      "Email": "", "WebPage": "", "Contact": "PRUEBA",
-      "PhoneNumber1": "(011)3333-3333", "PhoneNumber2": ""
+      "Street": "",
+      "Number": "",
+      "Floor": "",
+      "Apartment": "",
+      "Tower": "",
+      "Block": "",
+      "City": "",
+      "PostalCode": "",
+      "ProvinceCode": "0",
+      "Email": "",
+      "WebPage": "",
+      "Contact": "PRUEBA",
+      "PhoneNumber1": "(011)3333-3333",
+      "PhoneNumber2": ""
     }
   ],
   "PagingError": null,
@@ -1212,10 +1272,26 @@ Devuelve tanto las sucursales (`CentralizedStock: false`) como los depósitos de
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "Id": 1, "Code": "1", "Description": "DEPOSITO CASA CENTRAL", "Disabled": false, "CentralizedStock": false },
-    { "Id": 1, "Code": "10", "Description": "DEPOSITO CENTRALIZADO", "Disabled": false, "CentralizedStock": true }
+    {
+      "Id": 1,
+      "Code": "1",
+      "Description": "DEPOSITO CASA CENTRAL",
+      "Disabled": false,
+      "CentralizedStock": false
+    },
+    {
+      "Id": 1,
+      "Code": "10",
+      "Description": "DEPOSITO CENTRALIZADO",
+      "Disabled": false,
+      "CentralizedStock": true
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1240,12 +1316,23 @@ Devuelve tanto las sucursales (`CentralizedStock: false`) como los depósitos de
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Id": 2, "Code": "UNI", "Description": "Unidades", "Initials": "UN", "Quantity": 0,
-      "UnitType": "", "AfipCode": "07", "AfipEquivalence": 1.0,
-      "TransportCode": "", "TransportEquivalence": 0.0
+      "Id": 2,
+      "Code": "UNI",
+      "Description": "Unidades",
+      "Initials": "UN",
+      "Quantity": 0,
+      "UnitType": "",
+      "AfipCode": "07",
+      "AfipEquivalence": 1.0,
+      "TransportCode": "",
+      "TransportEquivalence": 0.0
     }
   ],
   "PagingError": null,
@@ -1271,9 +1358,18 @@ Devuelve tanto las sucursales (`CentralizedStock: false`) como los depósitos de
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "Id": 1, "Code": "01", "DescriptionScale": "COLOR", "NumberScale": 1 }
+    {
+      "Id": 1,
+      "Code": "01",
+      "DescriptionScale": "COLOR",
+      "NumberScale": 1
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1298,9 +1394,18 @@ Devuelve tanto las sucursales (`CentralizedStock: false`) como los depósitos de
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "Id": 1, "Code": "01", "CodeValue": "BL", "DescriptionValue": "BLANCO" }
+    {
+      "Id": 1,
+      "Code": "01",
+      "CodeValue": "BL",
+      "DescriptionValue": "BLANCO"
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1332,33 +1437,61 @@ Devuelve los artículos con su composición, comentarios y valores de escala. S�
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "Id": 100,
       "SKUCode": "KIT100",
       "Description": "KIT AUDIO COMPLETO",
       "AdditionalDescription": "",
-      "AlternativeCode": "", "BarCode": "",
-      "Commission": 6.0, "Discount": 0.0,
-      "MeasureUnitCode": "UNI", "SecondMeasureUnitCode": "",
-      "StockEquivalence": 0.0, "StockControlUnit": "P",
-      "SalesMeasureUnitCode": "UNI", "SalesEquivalence": 1.0,
-      "MaximumStock": 0.0, "MinimumStock": 0.0, "RestockPoint": 0.0,
-      "Observations": "", "Kit": true,
-      "KitValidityDateSince": null, "KitValidityDateUntil": null,
+      "AlternativeCode": "",
+      "BarCode": "",
+      "Commission": 6.0,
+      "Discount": 0.0,
+      "MeasureUnitCode": "UNI",
+      "SecondMeasureUnitCode": "",
+      "StockEquivalence": 0.0,
+      "StockControlUnit": "P",
+      "SalesMeasureUnitCode": "UNI",
+      "SalesEquivalence": 1.0,
+      "MaximumStock": 0.0,
+      "MinimumStock": 0.0,
+      "RestockPoint": 0.0,
+      "Observations": "",
+      "Kit": true,
+      "KitValidityDateSince": null,
+      "KitValidityDateUntil": null,
       "LastUpdateUtc": "2026-02-14T20:16:30.043",
-      "UseScale": "N", "Scale1": "", "Scale2": "", "BaseArticle": "",
-      "ScaleValue1": "", "ScaleValue2": "",
-      "DescriptionScale1": "", "DescriptionScale2": "",
-      "DescriptionValueScale1": "", "DescriptionValueScale2": "",
+      "UseScale": "N",
+      "Scale1": "",
+      "Scale2": "",
+      "BaseArticle": "",
+      "ScaleValue1": "",
+      "ScaleValue2": "",
+      "DescriptionScale1": "",
+      "DescriptionScale2": "",
+      "DescriptionValueScale1": "",
+      "DescriptionValueScale2": "",
       "Disabled": false,
       "ProductComposition": [
-        { "ComponentSKUCode": "0100100150", "Quantity": 1 },
-        { "ComponentSKUCode": "0100100151", "Quantity": 2 }
+        {
+          "ComponentSKUCode": "0100100150",
+          "Quantity": 1
+        },
+        {
+          "ComponentSKUCode": "0100100151",
+          "Quantity": 2
+        }
       ],
       "ProductComments": [
-        { "Line": 1, "Text": "Comentario para la impresión" }
+        {
+          "Line": 1,
+          "Text": "Comentario para la impresión"
+        }
       ]
     }
   ],
@@ -1404,23 +1537,42 @@ La respuesta tiene la misma estructura que [`Product`](#recproduct).
 | `Id` | string | Filtra por identificador de saldo. |
 | `UseEqual` | bool | Búsqueda exacta (`true`) o parcial (`false`, valor por defecto). Aplica a `FilterProductCode`, `StoreNumber`, `WarehouseCode` y `filter`. |
 | `Centraliza` | bool | Incluir stock centralizado. |
+| `UpdatedDate` | datetime | Sólo saldos actualizados desde esa fecha (hora local). Las filas adicionales de `DiscountPendingOrders` no tienen fecha: se devuelven con `LastUpdate` en `null`, también al filtrar. |
 | `groupByProduct` | bool | Si es `true`, la consulta se resuelve como [`StockGroupByProduct`](#recstockgroup) (saldo agrupado por artículo). Por defecto **false**. |
 | `stockGroupByProduct` | bool | Alias de `groupByProduct`: si es `true`, la consulta se resuelve como [`StockGroupByProduct`](#recstockgroup). Por defecto **false**. |
+
+Los saldos sin movimientos desde la instalación de este cambio no tienen fecha de actualización: `LastUpdate` vuelve `null` al consultar sin `UpdatedDate` y el filtro los excluye. Lo mismo aplica en [`StockGroupByProduct`](#recstockgroup) cuando ninguna fila del artículo tiene fecha.
+
+Ejemplo:
+
+```
+https://{llave}.connect.axoft.com/api/eCommerce/Stock?UpdatedDate=2026-02-14T20:16:30
+```
 
 <details>
 <summary>Respuesta</summary>
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "SKUCode": "0100200659",
-      "MeasureCode": "UNI", "SecondMeasureCode": "",
-      "WarehouseCode": "1", "StoreNumber": 1,
-      "Quantity": 120.0, "SecondQuantity": 0.0,
-      "PendingQuantity": 5.0, "SecondPendingQuantity": 0.0,
-      "EngagedQuantity": 2.0, "SecondEngagedQuantity": 0.0
+      "MeasureCode": "UNI",
+      "SecondMeasureCode": "",
+      "WarehouseCode": "1",
+      "StoreNumber": 1,
+      "Quantity": 120.0,
+      "SecondQuantity": 0.0,
+      "PendingQuantity": 5.0,
+      "SecondPendingQuantity": 0.0,
+      "EngagedQuantity": 2.0,
+      "SecondEngagedQuantity": 0.0,
+      "LastUpdate": "2026-02-14T20:16:30.043"
     }
   ],
   "PagingError": null,
@@ -1437,7 +1589,7 @@ La respuesta tiene la misma estructura que [`Product`](#recproduct).
 
 [<sub>Volver a recursos</sub>](#recursos)
 
-Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito: `StoreNumber` vuelve `0` y `WarehouseCode` `null`).
+Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito: `StoreNumber` vuelve `0` y `WarehouseCode` `null`). El campo `LastUpdate` del grupo es la mayor fecha de actualización de saldo entre las filas agrupadas que cumplen los demás filtros; `null` si ninguna tiene fecha.
 
 | Parámetro | Tipo | Descripción |
 | --------- | ---- | ----------- |
@@ -1447,21 +1599,32 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 | `StoreNumber` | string | Número(s) de sucursal (lista separada por coma). |
 | `DiscountPendingOrders` | bool | Descuenta las órdenes pendientes. |
 | `Centraliza` | bool | Incluir stock centralizado. |
+| `UpdatedDate` | datetime | Sólo artículos con algún saldo actualizado desde esa fecha (hora local). |
 
 <details>
 <summary>Respuesta</summary>
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
       "SKUCode": "0100200659",
-      "MeasureCode": "UNI", "SecondMeasureCode": "",
-      "StoreNumber": 0, "WarehouseCode": null,
-      "Quantity": 340.0, "SecondQuantity": 0.0,
-      "PendingQuantity": 5.0, "SecondPendingQuantity": 0.0,
-      "EngagedQuantity": 2.0, "SecondEngagedQuantity": 0.0
+      "MeasureCode": "UNI",
+      "SecondMeasureCode": "",
+      "StoreNumber": 0,
+      "WarehouseCode": null,
+      "Quantity": 340.0,
+      "SecondQuantity": 0.0,
+      "PendingQuantity": 5.0,
+      "SecondPendingQuantity": 0.0,
+      "EngagedQuantity": 2.0,
+      "SecondEngagedQuantity": 0.0,
+      "LastUpdate": "2026-02-14T20:16:30.043"
     }
   ],
   "PagingError": null,
@@ -1487,13 +1650,23 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Id": 10, "PriceListNumber": 2, "Description": "LISTA MAYORISTA",
-      "CommonCurrency": true, "IvaIncluded": true, "InternalTaxIncluded": false,
-      "ValidityDateSince": null, "ValidityDateUntil": null,
-      "Disabled": false, "Display": "2 - LISTA MAYORISTA"
+      "Id": 10,
+      "PriceListNumber": 2,
+      "Description": "LISTA MAYORISTA",
+      "CommonCurrency": true,
+      "IvaIncluded": true,
+      "InternalTaxIncluded": false,
+      "ValidityDateSince": null,
+      "ValidityDateUntil": null,
+      "Disabled": false,
+      "Display": "2 - LISTA MAYORISTA"
     }
   ],
   "PagingError": null,
@@ -1522,13 +1695,20 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Id": 5001, "PriceListNumber": 2, "SKUCode": "0100200659",
+      "Id": 5001,
+      "PriceListNumber": 2,
+      "SKUCode": "0100200659",
       "Price": 7700.0,
       "DatePrice": "2026-02-14T20:16:30.043",
-      "ValidityDateSince": null, "ValidityDateUntil": null
+      "ValidityDateSince": null,
+      "ValidityDateUntil": null
     }
   ],
   "PagingError": null,
@@ -1556,9 +1736,18 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "SKUCode": "0100200659", "CustomerCode": "010010", "Price": 7500.0, "PriceListNumber": 2 }
+    {
+      "SKUCode": "0100200659",
+      "CustomerCode": "010010",
+      "Price": 7500.0,
+      "PriceListNumber": 2
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1586,9 +1775,17 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "SKUCode": "0100200659", "CustomerCode": "010010", "Discount": 10.0 }
+    {
+      "SKUCode": "0100200659",
+      "CustomerCode": "010010",
+      "Discount": 10.0
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1617,30 +1814,69 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Code": "010010", "BusinessName": "EMPRESA S.A.", "TradeName": "EMPRESA",
-      "Address": "CERRITO 1186", "PostalCode": "1122", "City": "CABA", "ProvinceCode": "0",
-      "TradeAddress": "", "PhoneNumbers": "011-3333-3333", "Email": "cliente@mail.com",
-      "MobilePhoneNumber": "", "WebPage": "",
-      "IvaCategoryCode": "RI", "DocumentType": "80", "DocumentNumber": "30111111118",
-      "PriceListNumber": 2, "Discount": 0.0, "Observations": "",
-      "DisabledDate": null, "UpdateDatetime": "2026-01-10T00:00:00", "LastUpdateUtc": "2026-02-14T00:00:00",
+      "Code": "010010",
+      "BusinessName": "EMPRESA S.A.",
+      "TradeName": "EMPRESA",
+      "Address": "CERRITO 1186",
+      "PostalCode": "1122",
+      "City": "CABA",
+      "ProvinceCode": "0",
+      "TradeAddress": "",
+      "PhoneNumbers": "011-3333-3333",
+      "Email": "cliente@mail.com",
+      "MobilePhoneNumber": "",
+      "WebPage": "",
+      "IvaCategoryCode": "RI",
+      "DocumentType": "80",
+      "DocumentNumber": "30111111118",
+      "PriceListNumber": 2,
+      "Discount": 0.0,
+      "Observations": "",
+      "DisabledDate": null,
+      "UpdateDatetime": "2026-01-10T00:00:00",
+      "LastUpdateUtc": "2026-02-14T00:00:00",
       "ShippingAddresses": [
         {
-          "Code": "PRINCIPAL", "Address": "9 DE JULIO 1186", "ProvinceCode": "0",
-          "City": "CABA", "PostalCode": "1122", "PhoneNumber1": "", "PhoneNumber2": "",
-          "DefaultAddress": "S", "Enabled": "S", "DeliveryHours": "",
-          "DeliversMonday": "S", "DeliversTuesday": "S", "DeliversWednesday": "S",
-          "DeliversThursday": "S", "DeliversFriday": "S", "DeliversSaturday": "N", "DeliversSunday": "N"
+          "Code": "PRINCIPAL",
+          "Address": "9 DE JULIO 1186",
+          "ProvinceCode": "0",
+          "City": "CABA",
+          "PostalCode": "1122",
+          "PhoneNumber1": "",
+          "PhoneNumber2": "",
+          "DefaultAddress": "S",
+          "Enabled": "S",
+          "DeliveryHours": "",
+          "DeliversMonday": "S",
+          "DeliversTuesday": "S",
+          "DeliversWednesday": "S",
+          "DeliversThursday": "S",
+          "DeliversFriday": "S",
+          "DeliversSaturday": "N",
+          "DeliversSunday": "N"
         }
       ],
-      "CustomerComments": [ { "Line": 1, "Text": "Cliente preferencial" } ],
-      "SellerCode": "2", "CreditQuota": 500000.0,
-      "LocalAccountBalance": 12000.0, "ForeignAccountBalance": 0.0,
-      "ForeignCurrencyClause": false, "CreditQuotaCurrencyCode": "PES",
-      "SaleConditionCode": 3, "TransportCode": "01"
+      "CustomerComments": [
+        {
+          "Line": 1,
+          "Text": "Cliente preferencial"
+        }
+      ],
+      "SellerCode": "2",
+      "CreditQuota": 500000.0,
+      "LocalAccountBalance": 12000.0,
+      "ForeignAccountBalance": 0.0,
+      "ForeignCurrencyClause": false,
+      "CreditQuotaCurrencyCode": "PES",
+      "SaleConditionCode": 3,
+      "TransportCode": "01"
     }
   ],
   "PagingError": null,
@@ -1666,9 +1902,18 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "Code": "2", "Name": "JUAN PEREZ", "CommissionPercentage": 6.0, "Disabled": false }
+    {
+      "Code": "2",
+      "Name": "JUAN PEREZ",
+      "CommissionPercentage": 6.0,
+      "Disabled": false
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1693,13 +1938,26 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Id": 1, "Code": "01", "Name": "TRANSPORTE OESTE", "IVACategory": "RI",
-      "Cuit": "30111111118", "SurchargePercentage": 0.0,
-      "Address": "AV. SIEMPREVIVA 100", "PostalCode": "1122", "City": "CABA", "ProvinceCode": "0",
-      "PhoneNumbers": "011-4444-4444", "Email": "", "WebPage": "",
+      "Id": 1,
+      "Code": "01",
+      "Name": "TRANSPORTE OESTE",
+      "IVACategory": "RI",
+      "Cuit": "30111111118",
+      "SurchargePercentage": 0.0,
+      "Address": "AV. SIEMPREVIVA 100",
+      "PostalCode": "1122",
+      "City": "CABA",
+      "ProvinceCode": "0",
+      "PhoneNumbers": "011-4444-4444",
+      "Email": "",
+      "WebPage": "",
       "Comments": ""
     }
   ],
@@ -1726,11 +1984,18 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Code": 1, "Description": "CONTADO", "Cash": true,
-      "GenerateAlternativeDate": false, "GenerateDebitLatePayment": false
+      "Code": 1,
+      "Description": "CONTADO",
+      "Cash": true,
+      "GenerateAlternativeDate": false,
+      "GenerateDebitLatePayment": false
     }
   ],
   "PagingError": null,
@@ -1756,11 +2021,20 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "Id": 1, "CurrencyCode": "01", "Description": "PESOS", "Symbol": "$", "Type": "C",
-      "RG1547Code": "PES", "AFIPCode": ""
+      "Id": 1,
+      "CurrencyCode": "01",
+      "Description": "PESOS",
+      "Symbol": "$",
+      "Type": "C",
+      "RG1547Code": "PES",
+      "AFIPCode": ""
     }
   ],
   "PagingError": null,
@@ -1787,9 +2061,17 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
-    { "IdRenglon": 1001, "Value": 1050.75, "DateTime": "2026-06-30T15:00:00" }
+    {
+      "IdRenglon": 1001,
+      "Value": 1050.75,
+      "DateTime": "2026-06-30T15:00:00"
+    }
   ],
   "PagingError": null,
   "OrderError": null,
@@ -1815,11 +2097,18 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
   "Data": [
     {
-      "CounterfoilCode": 1, "Description": "FACTURAS A", "CounterfoilType": "FAC",
-      "Voucher": "FAC", "CounterfoilExpiration": null
+      "CounterfoilCode": 1,
+      "Description": "FACTURAS A",
+      "CounterfoilType": "FAC",
+      "Voucher": "FAC",
+      "CounterfoilExpiration": null
     }
   ],
   "PagingError": null,
@@ -1848,9 +2137,21 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
-  "Data": [ { "SkuCode": "0100200659", "IdFolder": 12 } ],
-  "PagingError": null, "OrderError": null, "succeeded": true, "Message": null
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SkuCode": "0100200659",
+      "IdFolder": 12
+    }
+  ],
+  "PagingError": null,
+  "OrderError": null,
+  "succeeded": true,
+  "Message": null
 }
 ```
 </details>
@@ -1870,9 +2171,23 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
-  "Data": [ { "SkuCode": "0100200659", "IdFolder": 12, "RelationName": "RELACIONADOS", "ShowRelation": true } ],
-  "PagingError": null, "OrderError": null, "succeeded": true, "Message": null
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SkuCode": "0100200659",
+      "IdFolder": 12,
+      "RelationName": "RELACIONADOS",
+      "ShowRelation": true
+    }
+  ],
+  "PagingError": null,
+  "OrderError": null,
+  "succeeded": true,
+  "Message": null
 }
 ```
 </details>
@@ -1890,9 +2205,22 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
-  "Data": [ { "IdFolder": 12, "Name": "ELECTRODOMÉSTICOS", "IdParent": null } ],
-  "PagingError": null, "OrderError": null, "succeeded": true, "Message": null
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "IdFolder": 12,
+      "Name": "ELECTRODOMÉSTICOS",
+      "IdParent": null
+    }
+  ],
+  "PagingError": null,
+  "OrderError": null,
+  "succeeded": true,
+  "Message": null
 }
 ```
 </details>
@@ -1915,9 +2243,21 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
-  "Data": [ { "CustomerCode": "010010", "IdFolder": 5 } ],
-  "PagingError": null, "OrderError": null, "succeeded": true, "Message": null
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "CustomerCode": "010010",
+      "IdFolder": 5
+    }
+  ],
+  "PagingError": null,
+  "OrderError": null,
+  "succeeded": true,
+  "Message": null
 }
 ```
 </details>
@@ -1936,9 +2276,23 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
-  "Data": [ { "CustomerCode": "010010", "IdFolder": 5, "RelationName": "MAYORISTAS", "ShowRelation": true } ],
-  "PagingError": null, "OrderError": null, "succeeded": true, "Message": null
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "CustomerCode": "010010",
+      "IdFolder": 5,
+      "RelationName": "MAYORISTAS",
+      "ShowRelation": true
+    }
+  ],
+  "PagingError": null,
+  "OrderError": null,
+  "succeeded": true,
+  "Message": null
 }
 ```
 </details>
@@ -1956,9 +2310,22 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 
 ```json
 {
-  "Paging": { "PageNumber": 1, "PageSize": 50, "MoreData": false },
-  "Data": [ { "IdFolder": 5, "Name": "CLIENTES MAYORISTAS", "IdParent": null } ],
-  "PagingError": null, "OrderError": null, "succeeded": true, "Message": null
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 50,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "IdFolder": 5,
+      "Name": "CLIENTES MAYORISTAS",
+      "IdParent": null
+    }
+  ],
+  "PagingError": null,
+  "OrderError": null,
+  "succeeded": true,
+  "Message": null
 }
 ```
 </details>
@@ -2000,6 +2367,7 @@ Si hoy integra con la **API de Tango Tiendas** (`api/Aperture`) y migra a la API
 
 - Los recursos GET agregan filtros nombrados propios (`FilterCode`, `FilterListNumber`, `FilterProductCode`, etc.), de búsqueda exacta — salvo en `Stock` y `DiscountByCustomer`, donde el operador depende de `UseEqual` (parcial por defecto).
 - Los parámetros `sort` y `validatePageSize` de Tiendas no están disponibles en eCommerce; `lastUpdate` se conserva sólo en `CurrencyExchangeRate` (ver [el recurso](#reccurrencyrate)).
+- El filtro por fecha de [`Stock`](#recstock) y [`StockGroupByProduct`](#recstockgroup) es `UpdatedDate`, que compara en hora local contra la fecha de actualización del saldo.
 
 <a name="consideraciones"></a>
 

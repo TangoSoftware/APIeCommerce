@@ -1599,7 +1599,7 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
 | `StoreNumber` | string | Número(s) de sucursal (lista separada por coma). |
 | `DiscountPendingOrders` | bool | Descuenta las órdenes pendientes. |
 | `Centraliza` | bool | Incluir stock centralizado. |
-| `UpdatedDate` | datetime | Sólo artículos con algún saldo actualizado desde esa fecha (hora local). |
+| `UpdatedDate` | datetime | Sólo artículos con algún saldo actualizado desde esa fecha (hora local). Con `DiscountPendingOrders=true`, los artículos con comprometido de órdenes pendientes se devuelven aunque no cumplan la fecha. |
 
 <details>
 <summary>Respuesta</summary>

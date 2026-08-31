@@ -2357,6 +2357,7 @@ Si hoy integra con la **API de Tango Tiendas** (`api/Aperture`) y migra a la API
   - Un token inválido devuelve **401**.
   - Una ruta inexistente bajo el prefijo `Api/eCommerce` devuelve **404** con un cuerpo JSON que indica el error en `Message`, en cualquier verbo.
   - Los datos inválidos en el `POST Order` responden **400** con el detalle por campo en la propiedad `errors` (en Tiendas: 200 con `isOk: false`).
+- En [`StockGroupByProduct`](#recstockgroup) y en los alias de agrupación de [`Stock`](#recstock), el comprometido de las órdenes pendientes (`DiscountPendingOrders=true`) se suma una sola vez por artículo. `EngagedQuantity` puede resultar menor que el informado por Tiendas en artículos con saldo en más de un depósito.
 
 **Recursos nuevos**
 

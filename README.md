@@ -25,6 +25,10 @@ API REST para integrar una tienda de comercio electrónico con **Tango Gestión*
   - [Ejemplos de JSON](#ejemplos)
 - [Consulta de datos](#consulta)
   - [Recursos de consulta](#recursos)
+- [Funciones de inteligencia artificial](#ai)
+  - [Datos comunes](#aidatos)
+  - [Recursos de AI](#airecursos)
+  - [Aspectos particulares de los recursos de AI](#aidiferencias)
 - [Migración desde la API de Tango Tiendas](#migracion)
 - [Consideraciones](#consideraciones)
 
@@ -55,9 +59,13 @@ Todas las rutas parten de la base `https://{llave}.connect.axoft.com/api/eCommer
 | GET | [`/PriceByCustomer`](#recpricebycustomer) | Precios por cliente. |
 | GET | [`/PriceList`](#recpricelist) | Listas de precios. |
 | GET | [`/Product`](#recproduct) | Artículos (composición, comentarios y escalas). |
+| GET | [`/ProductAssistant`](#recassistant) | Asistente de ventas: busca por descripción o sugiere complementarios y sustitutos. |
+| GET | [`/ProductComplementaries`](#reccomplementaries) | Artículos complementarios del artículo consultado. |
+| GET | [`/ProductSemanticSearch`](#recsemanticsearch) | Búsqueda de artículos por descripción, comparando por significado. |
 | GET | [`/ProductsFolder`](#recproductsfolder) | Clasificador de artículos: artículos en carpetas. |
 | GET | [`/ProductsFolderClassifier`](#recproductsclassifier) | Clasificador de artículos: carpetas. |
 | GET | [`/ProductsRelation`](#recproductsrelation) | Clasificador de artículos: relaciones. |
+| GET | [`/ProductSubstitutes`](#recsubstitutes) | Artículos sustitutos del artículo consultado. |
 | GET | [`/Publications`](#recpublications) | Publicaciones (relación artículo de la tienda ↔ artículo de Tango). |
 | GET | [`/SaleCondition`](#recsalecondition) | Condiciones de venta. |
 | GET | [`/Scale`](#recscale) | Escalas. |
@@ -169,7 +177,7 @@ Respuesta cuando el acceso es válido:
 
 ### Formato de respuesta y paginación
 
-Salvo `Dummy`, **todas las respuestas GET usan el mismo formato**. Los datos se entregan de forma **paginada**:
+**Todas las respuestas GET usan el mismo formato**, salvo `Dummy` y los [recursos de AI](#ai), que devuelven una sola página con su propio formato. Los datos se entregan de forma **paginada**:
 
 ```json
 {
@@ -216,7 +224,7 @@ Un GET sin resultados responde **200** con la lista vacía:
 
 > **Importante — fin de la paginación:** la última página se detecta con `Paging.MoreData: false` (o `Data` vacío). Si migra desde la API de Tango Tiendas, el terminador del bucle de sincronización cambió: consúltelo en [Migración](#migracion).
 
-**Parámetros de paginación** (comunes a todos los GET):
+**Parámetros de paginación**, comunes a todos los GET. Los [recursos de AI](#ai) devuelven una sola página y tienen su propio tope de `PageSize`.
 
 | Parámetro | Obligatorio | Descripción |
 | --------- | ----------- | ----------- |
@@ -229,7 +237,7 @@ Ejemplo:
 https://{llave}.connect.axoft.com/api/eCommerce/Currency?PageNumber=1&PageSize=500
 ```
 
-Si `PageNumber` o `PageSize` son menores o iguales a 0, la respuesta reemplaza `Paging`/`Data` por `PagingError`:
+Si `PageNumber` o `PageSize` son menores o iguales a 0, la respuesta reemplaza `Paging`/`Data` por `PagingError` (los [recursos de AI](#ai) responden **400** con `succeeded` y `Message`, sin `PagingError`):
 
 ```json
 {
@@ -251,10 +259,20 @@ Si `PageNumber` o `PageSize` son menores o iguales a 0, la respuesta reemplaza `
 | --------- | ---- | --------------- |
 | GET/POST exitoso | **200** | `succeeded: true` |
 | GET sin resultados | **200** | `succeeded: true`, `Message: "No se encontraron valores"` |
-| Datos inválidos o con formato incorrecto (GET o POST) | **400** | Cuerpo JSON con el detalle por campo en la propiedad `errors` (ver [ejemplo](#ejemplo400)). Incluye un tipo inválido en la query de un GET, p. ej. `PageSize=abc` (no numérico) |
-| Falta un header de autenticación (o viene vacío), o el token es inválido | **401** | Sin cuerpo (respuesta vacía); el código de estado es el único indicador |
+| Datos inválidos o con formato incorrecto (GET o POST), incluido un tipo inválido en la query de un GET, p. ej. `PageSize=abc` | **400** | Cuerpo JSON con el detalle por campo en la propiedad `errors` (ver [ejemplo](#ejemplo400)) |
+| Falta un header de autenticación (o viene vacío), o el token es inválido | **401** | Sin cuerpo; sólo el código HTTP indica el error |
 | Ruta inexistente bajo `Api/eCommerce` | **404** | `Message: "No HTTP resource was found that matches the request URI '...'."` (única clave del cuerpo) |
-| Método HTTP no soportado por el recurso (por ejemplo, DELETE a cualquier recurso, o GET a `/Dummy`, que es POST) | **405** | Sin cuerpo (respuesta vacía); el código de estado es el único indicador |
+| Método HTTP no soportado por el recurso (por ejemplo, DELETE a cualquier recurso, o GET a `/Dummy`, que es POST) | **405** | Sin cuerpo; sólo el código HTTP indica el error |
+
+Los [recursos de AI](#ai) cambian el cuerpo del **400** y agregan estas respuestas:
+
+| Situación | HTTP | Cómo se informa |
+| --------- | ---- | --------------- |
+| Tango Billing rechaza la consulta, por ejemplo cuando el saldo es insuficiente, se superó el presupuesto mensual o la opción de eCommerce está inactiva | **200** | `succeeded: false` y el mensaje que devuelve Tango Billing |
+| Datos inválidos | **400** | `succeeded: false` y `Message` con la causa, sin la propiedad `errors`. Si hay varios datos inválidos, informa sólo el primero |
+| La base de la empresa no tiene SQL Server 2025, en los recursos que usan vectores | **409** | `succeeded: false`, `Message: "Este proceso requiere SQL Server 2025 o superior. Por favor, actualice la versión de SQL Server."` |
+| Se alcanzó el límite de consultas simultáneas | **429** | `succeeded: false`, `Message: "El servicio está procesando otras consultas. Reintente en unos instantes."`. El límite se comparte entre todas las empresas de la instalación. La respuesta no incluye el header `Retry-After` |
+| Venció la espera máxima de las llamadas al modelo | **504** | `succeeded: false`, `Message: "El servicio no respondió a tiempo. Reintente en unos instantes."` |
 
 <a name="ejemplo400"></a>
 
@@ -1051,7 +1069,7 @@ GET https://{llave}.connect.axoft.com/api/eCommerce/Product?PageNumber=1&PageSiz
 
 **Sincronización incremental:** varios recursos aceptan un parámetro de fecha (`UpdatedDate`, `DatePrice`, `LastUpdate`) para obtener sólo los registros **creados o modificados** desde esa fecha. En `Customer` y `Product`, la comparación contra la fecha de alta es a nivel **día**: un corte con hora incluye también los registros dados de alta ese mismo día (la fecha de alta se registra sin hora). Los registros **sin fecha de alta ni de modificación** (datos históricos de Tango) no se devuelven al filtrar por `UpdatedDate`, cualquiera sea el corte; para obtenerlos, consulte el recurso sin ese parámetro. Envíe la fecha en hora local, con el formato `AAAA-MM-DDTHH:MM:SS` y sin sufijo de zona horaria.
 
-**Filtro `filter`:** todos los GET aceptan el parámetro `filter`. **Prefiera los filtros nombrados de cada recurso**; el operador de cada filtro se indica en la tabla de parámetros del recurso cuando no es la búsqueda exacta.
+**Filtro `filter`:** todos los GET aceptan el parámetro `filter`. **Utilice los filtros nombrados de cada recurso**; el operador de cada filtro se indica en la tabla de parámetros del recurso cuando no es la búsqueda exacta. Los [recursos de AI](#ai) ignoran `filter`.
 
 Su comportamiento depende del recurso:
 
@@ -2368,12 +2386,399 @@ Devuelve el saldo agrupado por artículo (sin discriminar sucursal ni depósito:
     }
   ],
   "PagingError": null,
+  "Message": null,
   "OrderError": null,
-  "succeeded": true,
-  "Message": null
+  "succeeded": true
 }
 ```
 </details>
+
+<a name="ai"></a>
+
+## Funciones de inteligencia artificial
+
+[<sub>Volver al índice</sub>](#inicio)
+
+Las funciones de inteligencia artificial de Tango se consultan con cuatro recursos:
+
+- [Artículos sustitutos (`ProductSubstitutes`)](#recsubstitutes): artículos similares al consultado, para ofrecer en su lugar.
+- [Artículos complementarios (`ProductComplementaries`)](#reccomplementaries): artículos que complementan la compra del consultado.
+- [Búsqueda por descripción (`ProductSemanticSearch`)](#recsemanticsearch): artículos que responden a un texto de búsqueda, comparando por significado y no por palabras exactas.
+- [Asistente de ventas (`ProductAssistant`)](#recassistant): reúne los tres anteriores en un solo recurso.
+
+Los tres primeros son recursos independientes, cada uno con sus datos de consulta y sus requisitos. El asistente elige cuál de ellos responde según los datos que recibe: con un texto busca, y con el código de un artículo sugiere complementarios si tiene disponibilidad y sustitutos si no. Se puede llamar al recurso que corresponde en cada caso o delegar la elección en el asistente.
+
+**Qué necesita la empresa antes de consultarlos**
+
+Todos los recursos necesitan:
+
+- Artículos del [catálogo de eCommerce](#aicatalogo). Tanto el artículo consultado como los devueltos deben pertenecer al catálogo.
+- La credencial de Tango AI registrada para la empresa.
+
+Además, según el recurso:
+
+- **Sustitutos y búsqueda por descripción:** SQL Server 2025 o superior en la base de la empresa y vectores vigentes de los artículos.
+- **Complementarios:** artículos clasificados en el clasificador de artículos. Funcionan con versiones anteriores de SQL Server. La clasificación, manual o con [*Clasificación de artículos por AI*](https://ayudas.axoft.com/26ar/ayudas/st/archivos_carp_st/actualizacion_carp_st/clasificadorarticulo_st/clasifartia_st/), no exige que el artículo esté incluido en la búsqueda semántica, por lo que los complementarios pueden devolver artículos que los sustitutos y la búsqueda por descripción nunca devuelven.
+- **Asistente:** los requisitos del recurso que resuelve en cada consulta. Cuando recibe texto requiere SQL Server 2025, aunque resuelva complementarios.
+
+Los vectores los genera el proceso Stock › Archivos › Actualizaciones › [*Actualización de datos para búsqueda semántica de artículos*](https://ayudas.axoft.com/26ar/ayudas/st/archivos_carp_st/actualizacion_carp_st/busqsemantica_st/), sólo para los artículos incluidos en la búsqueda semántica. Un artículo puede tener vectores generados con su clasificación y sin ella; la configuración de la búsqueda semántica en Stock › Archivos › Carga inicial › [*Parámetros de AI para Stock*](https://ayudas.axoft.com/26ar/ayudas/st/archivos_carp_st/cargainicial_carp_st/paramia_st/) decide cuáles de los dos están vigentes. Si al cambiar esa configuración los artículos no tienen vectores generados de la forma elegida, hay que generarlos.
+
+<a name="aidatos"></a>
+
+### Datos comunes
+
+[<sub>Volver al índice</sub>](#inicio)
+
+| Parámetro | Tipo | Descripción |
+| --------- | ---- | ----------- |
+| `IncludeUnavailable` | bool | En `true` incluye los artículos sin disponibilidad. Por defecto toma el valor configurado en Tango, cuyo valor inicial es `false`. |
+| `IncludeStock` | bool | En `true` anida los saldos por depósito en cada artículo. Por defecto `false`. |
+| `IncludePrices` | bool | En `true` anida los precios por lista en cada artículo. Por defecto `false`. |
+| `Centraliza` | bool | Incluir stock centralizado. Funciona igual que en el recurso [`Stock`](#recstock). Determina la disponibilidad y el `Stock` anidado. En `true` sobre una empresa que no centraliza no hay saldos: ningún artículo tiene disponibilidad y la respuesta vuelve vacía salvo `IncludeUnavailable`. Por defecto `false`. |
+| `PageNumber` | int | Sólo admite el valor `1`: la respuesta es de página única. Otro valor responde **400**. |
+| `PageSize` | int | Máximo de resultados, de `1` al tope del recurso. Por defecto `50`. Un valor mayor al tope se recorta sin error y la respuesta informa el aplicado. En complementarios se valida pero no limita la respuesta: el tamaño lo definen `CategoryCount` y `ProductsPerCategory`, y la respuesta informa el producto de los dos (ver [`ProductComplementaries`](#reccomplementaries)). |
+
+**Qué devuelve cada artículo**
+
+`SKUCode`, `Description`, `MeasureUnitCode` y `Availability`; en los complementarios, además `Category`. `Availability` es verdadera cuando la suma de los saldos de stock del artículo en todos los depósitos, y con `Centraliza` en todas las sucursales, es mayor que cero: los mismos saldos que informa [`Stock`](#recstock), sin descontar el comprometido ni las órdenes pendientes.
+
+<a name="aicatalogo"></a>
+
+**El catálogo de eCommerce**
+
+Un artículo pertenece al catálogo de eCommerce cuando tiene marcada la opción **Publica en Tango eCommerce**, su perfil es Venta o Compra-Venta, es de tipo Simple, Fórmula o Kit fijo y no es un artículo base de escala. El catálogo es un subconjunto de lo que devuelve [`Product`](#recproduct). Pertenecer al catálogo es independiente de tener vectores, estar clasificado o tener disponibilidad: los vectores y la clasificación deciden qué artículos del catálogo puede encontrar cada recurso, y la disponibilidad decide cuáles de los encontrados se devuelven, salvo que `IncludeUnavailable` los incluya. El artículo consultado también debe pertenecer al catálogo.
+
+Cuando `IncludeUnavailable` incluye los artículos sin disponibilidad, `Availability` en `false` los distingue.
+
+**El orden de `Data`**
+
+- **Sustitutos y búsqueda por descripción, directos o a través del asistente:** se ordenan de mayor a menor similitud con el artículo consultado o con el texto de búsqueda. A igual similitud, por `SKUCode` ascendente.
+- **Complementarios:** se agrupan por categoría, en el orden en que el modelo las sugirió. Dentro de cada categoría, los artículos van en el orden en que se dieron de alta en Tango, del más antiguo al más reciente.
+- **Complementarios del asistente con código y texto:** se ordenan de mayor a menor similitud con el texto de búsqueda, sin agrupar por categoría. Los artículos sin vector van al final, ordenados entre sí por `SKUCode` ascendente.
+
+El orden por `SKUCode` es ordinal: compara los caracteres por su código, por lo que los dígitos van antes que las mayúsculas, y las mayúsculas antes que las minúsculas.
+
+**El nivel de precisión (`AccuracyLevel`)**
+
+Define la similitud mínima que deben tener los resultados. Admite los valores `maxima`, `alta`, `equilibrada`, `baja` y `minima`, sin distinguir mayúsculas de minúsculas. Por defecto toma el valor configurado en Tango, cuyo valor inicial es `equilibrada`. A mayor exigencia, los resultados son más similares y su cantidad puede ser menor. La respuesta informa el nivel aplicado en minúscula y sin tilde.
+
+**Valores predeterminados configurables**
+
+`AccuracyLevel`, `IncludeUnavailable` e `IncludeSameScaleBase` toman su valor predeterminado de la solapa **Asistente de ventas (eCommerce)** del proceso Stock › Archivos › Carga inicial › [*Parámetros de AI para Stock*](https://ayudas.axoft.com/26ar/ayudas/st/archivos_carp_st/cargainicial_carp_st/paramia_st/). El dato enviado en la consulta siempre prevalece sobre el configurado.
+
+**Respuestas vacías**
+
+Una consulta válida sin resultados responde **200** con la lista vacía. `Message` indica la causa:
+
+- `No se encontró el artículo indicado en el catálogo de eCommerce.`: el código no existe o el artículo no pertenece al catálogo.
+- `El artículo no tiene vectores vigentes. Se generan en el proceso Actualización de datos para búsqueda semántica de artículos.`: en sustitutos, directos o a través del asistente.
+- `No hay vectores vigentes. Se generan en el proceso Actualización de datos para búsqueda semántica de artículos.`: en la búsqueda por descripción y en el asistente sin código.
+- `El artículo no está clasificado. Se clasifica en el proceso Clasificador de artículos.`: en complementarios, directos o a través del asistente.
+- `Las categorías sugeridas no tienen artículos que cumplan los filtros de la consulta.`: en complementarios, directos o a través del asistente.
+- `No se encontraron artículos para la consulta.`: no hay artículos que cumplan los filtros de la consulta.
+
+La respuesta vacía informa las mismas propiedades adicionales que la respuesta con artículos:
+
+| Recurso y operación | Propiedades adicionales |
+| ------------------- | ----------------------- |
+| `ProductSubstitutes` | `AccuracyLevel` |
+| `ProductComplementaries` | `Scope` |
+| `ProductSemanticSearch` | `AccuracyLevel` |
+| `ProductAssistant` al buscar | `AccuracyLevel` |
+| `ProductAssistant` al sugerir sustitutos | `RecommendationType` y `AccuracyLevel` |
+| `ProductAssistant` al sugerir complementarios | `RecommendationType` y `Scope` |
+
+`RecommendationType` indica la operación que ejecutó el asistente: `Sustitutos` o `Complementarios`. Si la consulta no envía este dato, permite identificar cuál de las dos eligió el asistente.
+
+**Respuesta reducida con 200**
+
+En las siguientes situaciones, la API responde **200** con `succeeded: false` y `Message`, sin `Paging` ni `Data`. Lea `succeeded` antes de deserializarlos.
+
+- Licencia de la empresa inválida: devuelve el mensaje informado por la validación de licencia.
+- Funciones de AI no disponibles para la empresa: ocurre cuando no están configuradas las credenciales de Tango AI o de Tango Billing. Devuelve el mensaje `Las funciones de inteligencia artificial no están disponibles para esta empresa.`.
+- Tango Billing rechaza la consulta, por ejemplo cuando el saldo es insuficiente: devuelve el mensaje informado por Tango Billing.
+
+<a name="airecursos"></a>
+
+### Recursos de AI
+
+[<sub>Volver al índice</sub>](#inicio)
+
+<a name="recsubstitutes"></a>
+
+#### Artículos sustitutos — `GET /ProductSubstitutes`
+
+[<sub>Volver a recursos de AI</sub>](#airecursos)
+
+Devuelve artículos similares al consultado, ordenados de mayor a menor similitud. No llama al modelo: compara los vectores ya generados. Requiere SQL Server 2025 o superior en la base de la empresa. El tope de resultados es **500**.
+
+| Parámetro | Tipo | Descripción |
+| --------- | ---- | ----------- |
+| `SkuCode` | string | **Obligatorio.** Código completo de un artículo del catálogo, hasta 15 caracteres, incluidos los espacios. Requiere que tenga sus vectores generados. |
+| `AccuracyLevel` | string | [Nivel de precisión](#aidatos) que se aplica a la consulta. |
+| `IncludeSameScaleBase` | bool | En `false` excluye las demás combinaciones de la misma base de escala que el artículo consultado (por ejemplo, los otros talles o colores del mismo artículo base). Por defecto toma el valor configurado en Tango, cuyo valor inicial es `true`. |
+
+<details>
+<summary>Respuesta</summary>
+
+```json
+{
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 10,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SKUCode": "CAF-330",
+      "Description": "Cafetera Térmica Boreal",
+      "MeasureUnitCode": "UNI",
+      "Availability": true
+    }
+  ],
+  "AccuracyLevel": "equilibrada",
+  "Message": null,
+  "succeeded": true
+}
+```
+</details>
+
+<a name="reccomplementaries"></a>
+
+#### Artículos complementarios — `GET /ProductComplementaries`
+
+[<sub>Volver a recursos de AI</sub>](#airecursos)
+
+Devuelve los artículos complementarios en una lista plana, con la categoría de cada uno como un dato más de la fila. Llama al modelo en cada consulta: le envía la descripción del artículo y el árbol de carpetas del clasificador de artículos de la empresa, y el modelo elige las carpetas cuyos artículos complementan la compra; `Category` es la descripción de la carpeta. No requiere SQL Server 2025.
+
+| Parámetro | Tipo | Descripción |
+| --------- | ---- | ----------- |
+| `SkuCode` | string | **Obligatorio.** Código completo de un artículo del catálogo, hasta 15 caracteres, incluidos los espacios. Requiere que esté clasificado en una carpeta existente. |
+| `CategoryCount` | int | Máximo de categorías a sugerir, de 1 a 5. Por defecto `3`. |
+| `ProductsPerCategory` | int | Máximo de artículos por categoría, de 1 a 50. Por defecto `50`. |
+| `Scope` | string | Define qué tan cercanas al artículo consultado deben ser las categorías sugeridas por el modelo: `directo` se limita a categorías de artículos que se usan junto con él, `accesorio` contempla categorías intermedias y `ecosistema` incluye categorías más alejadas. Por defecto `accesorio`. |
+
+El tamaño de la respuesta se determina mediante `CategoryCount` y `ProductsPerCategory`, no mediante `PageSize`. `Paging.PageSize` informa el producto de ambos valores.
+
+Dentro de cada categoría, los artículos se seleccionan por orden de alta en Tango, del más antiguo al más reciente, hasta alcanzar el máximo indicado en `ProductsPerCategory`. La similitud con el artículo consultado no interviene en la selección.
+
+Si un artículo pertenece a más de una categoría sugerida, se devuelve una sola vez, asociado a la primera. En las categorías siguientes igualmente cuenta dentro del máximo de `ProductsPerCategory`, por lo que pueden devolver menos artículos que los solicitados.
+
+Las carpetas en las que está clasificado el artículo consultado se descartan, por lo que ese artículo no se devuelve. Otros artículos que compartan alguna de esas carpetas pueden aparecer si también pertenecen a una de las carpetas sugeridas.
+
+<details>
+<summary>Respuesta</summary>
+
+```json
+{
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 150,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SKUCode": "FIL-040",
+      "Description": "Filtros de papel N.º 4",
+      "MeasureUnitCode": "UNI",
+      "Availability": true,
+      "Category": "Preparación"
+    },
+    {
+      "SKUCode": "JAR-620",
+      "Description": "Jarra térmica 1 L",
+      "MeasureUnitCode": "UNI",
+      "Availability": true,
+      "Category": "Servicio"
+    }
+  ],
+  "Scope": "accesorio",
+  "Message": null,
+  "succeeded": true
+}
+```
+</details>
+
+<a name="recsemanticsearch"></a>
+
+#### Búsqueda por descripción — `GET /ProductSemanticSearch`
+
+[<sub>Volver a recursos de AI</sub>](#airecursos)
+
+Recibe un texto de búsqueda y devuelve los artículos que responden a la consulta. La comparación es por significado: el modelo convierte el texto en un vector y ese vector se compara contra los vectores del catálogo. Llama al modelo una sola vez por consulta. Requiere SQL Server 2025 o superior en la base de la empresa. El tope de resultados es **200**.
+
+| Parámetro | Tipo | Descripción |
+| --------- | ---- | ----------- |
+| `SearchText` | string | **Obligatorio.** Hasta 1.000 caracteres. Un texto mayor se rechaza con **400**, no se recorta. |
+| `AccuracyLevel` | string | [Nivel de precisión](#aidatos) que se aplica a la consulta. |
+
+<details>
+<summary>Respuesta</summary>
+
+```json
+{
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 10,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SKUCode": "JAR-620",
+      "Description": "Jarra térmica 1 L",
+      "MeasureUnitCode": "UNI",
+      "Availability": true
+    },
+    {
+      "SKUCode": "CAF-330",
+      "Description": "Cafetera Térmica Boreal",
+      "MeasureUnitCode": "UNI",
+      "Availability": true
+    }
+  ],
+  "AccuracyLevel": "equilibrada",
+  "Message": null,
+  "succeeded": true
+}
+```
+</details>
+
+<a name="recassistant"></a>
+
+#### Asistente de ventas — `GET /ProductAssistant`
+
+[<sub>Volver a recursos de AI</sub>](#airecursos)
+
+El asistente permite delegar en un único recurso la elección de la operación que corresponde según los datos de la consulta: buscar por descripción, sugerir sustitutos o sugerir complementarios. Debe recibir el texto de búsqueda, el código de un artículo o ambos:
+
+- **Sólo el texto:** el asistente busca y devuelve lo mismo que la [búsqueda por descripción](#recsemanticsearch).
+- **Sólo el código:** el asistente sugiere complementarios si el artículo tiene disponibilidad y sustitutos si no la tiene. `RecommendationType` decide la operación en lugar de la disponibilidad.
+- **Código y texto:**
+  - **Sustitutos:** los candidatos se determinan con el mismo criterio que cuando no se envía texto: similitud con el artículo consultado y nivel de precisión. Esos candidatos se ordenan de mayor a menor similitud con el texto.
+  - **Complementarios:** se devuelven los mismos artículos que sin texto. El texto sólo modifica el orden, de mayor a menor similitud con el texto, sin agrupar por categoría.
+
+  Si la empresa no tiene vectores vigentes, el texto se ignora. Si el texto no se puede convertir en vector, la consulta completa falla con `succeeded: false`.
+
+Un código que no existe o no pertenece al catálogo cuenta como sin disponibilidad, por lo que sin `RecommendationType` el asistente resuelve sustitutos: en SQL Server anterior a 2025 la consulta responde **409** en lugar de la lista vacía.
+
+| Parámetro | Tipo | Descripción |
+| --------- | ---- | ----------- |
+| `SkuCode` | string | Código completo de un artículo del catálogo, hasta 15 caracteres, incluidos los espacios. Obligatorio si no se envía `SearchText`. |
+| `SearchText` | string | Texto de búsqueda, hasta 1.000 caracteres. Obligatorio si no se envía `SkuCode`. |
+| `RecommendationType` | string | `Complementarios` o `Sustitutos`, un solo valor por consulta. Sin el dato, decide la disponibilidad del artículo. Sin `SkuCode`, un valor válido se ignora y no se informa en la respuesta; aun así, un valor desconocido o repetido responde **400**. |
+| `AccuracyLevel` | string | [Nivel de precisión](#aidatos) que se aplica a la búsqueda por descripción y a los sustitutos. |
+| `IncludeSameScaleBase` | bool | Aplica a los sustitutos. En `false` excluye las demás combinaciones de la misma base de escala que el artículo consultado (por ejemplo, los otros talles o colores del mismo artículo base). Por defecto toma el valor configurado en Tango, cuyo valor inicial es `true`. |
+| `CategoryCount` | int | Aplica a los complementarios. Máximo de categorías a sugerir, de 1 a 5. Por defecto `3`. |
+| `ProductsPerCategory` | int | Aplica a los complementarios. Máximo de artículos por categoría, de 1 a 50. Por defecto `50`. |
+| `Scope` | string | Aplica a los complementarios. Define qué tan cercanas al artículo consultado deben ser las categorías sugeridas por el modelo: `directo` se limita a categorías de artículos que se usan junto con él, `accesorio` contempla categorías intermedias y `ecosistema` incluye categorías más alejadas. Por defecto `accesorio`. |
+
+El tope es el del recurso equivalente: 200 al buscar, 500 en sustitutos, y 5 categorías de hasta 50 artículos en complementarios. Una consulta sin código y sin texto responde **400**. El asistente valida todos sus datos aunque la operación ejecutada no los use: por ejemplo, `CategoryCount` fuera de rango responde **400** también cuando la consulta sólo trae texto.
+
+<details>
+<summary>Respuesta al sugerir complementarios</summary>
+
+```json
+{
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 150,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SKUCode": "FIL-040",
+      "Description": "Filtros de papel N.º 4",
+      "MeasureUnitCode": "UNI",
+      "Availability": true,
+      "Category": "Preparación"
+    }
+  ],
+  "RecommendationType": "Complementarios",
+  "Scope": "accesorio",
+  "Message": null,
+  "succeeded": true
+}
+```
+</details>
+
+<details>
+<summary>Respuesta al sugerir sustitutos</summary>
+
+```json
+{
+  "Paging": {
+    "PageNumber": 1,
+    "PageSize": 10,
+    "MoreData": false
+  },
+  "Data": [
+    {
+      "SKUCode": "CAF-330",
+      "Description": "Cafetera Térmica Boreal",
+      "MeasureUnitCode": "UNI",
+      "Availability": true
+    }
+  ],
+  "RecommendationType": "Sustitutos",
+  "AccuracyLevel": "equilibrada",
+  "Message": null,
+  "succeeded": true
+}
+```
+</details>
+
+**Saldos y precios anidados**
+
+Con `IncludeStock` e `IncludePrices` cada artículo lleva sus saldos y sus precios, con la misma forma que en [`Stock`](#recstock) y [`Price`](#recprice), recortados a los datos que estos recursos informan. `Stock` equivale a consultar [`Stock`](#recstock) con `DiscountPendingOrders` en `false`. Las colecciones viajan completas: `Paging` describe sólo a `Data`.
+
+```json
+{
+  "SKUCode": "CAF-330",
+  "Description": "Cafetera Térmica Boreal",
+  "MeasureUnitCode": "UNI",
+  "Availability": true,
+  "Stock": [
+    {
+      "WarehouseCode": "1",
+      "StoreNumber": 1,
+      "Quantity": 4.0,
+      "PendingQuantity": 0.0,
+      "EngagedQuantity": 1.0
+    }
+  ],
+  "Prices": [
+    {
+      "PriceListNumber": 1,
+      "Price": 102500.0,
+      "DatePrice": "2026-08-01T09:00:00",
+      "ValidityDateSince": null,
+      "ValidityDateUntil": null
+    }
+  ]
+}
+```
+
+Con `IncludeStock` o `IncludePrices`, un artículo sin saldos o sin precios lleva la colección correspondiente vacía.
+
+<a name="aidiferencias"></a>
+
+### Aspectos particulares de los recursos de AI
+
+[<sub>Volver al índice</sub>](#inicio)
+
+Estos cuatro recursos se diferencian de los demás recursos de la API en los siguientes puntos:
+
+- **`SkuCode` identifica exactamente un artículo del catálogo:** debe coincidir con el código completo, de hasta 15 caracteres, incluidos los espacios. En los demás recursos actúa como filtro parcial. Sin coincidencia, o con un artículo fuera del catálogo, la respuesta es **200** con la lista vacía y el mensaje que lo indica.
+- **Un dato que no se puede interpretar según su tipo responde 400** con `El valor de {dato} no es válido.`, por ejemplo `PageSize=abc` o `IncludeStock=1`.
+- **Los valores de dominio no distinguen mayúsculas de minúsculas** (`AccuracyLevel`, `Scope`, `RecommendationType`) y la respuesta los informa en su forma canónica.
+- **`SkuCode` se compara tal como llega, con sus espacios iniciales, intermedios y finales.** De `SearchText`, `AccuracyLevel`, `Scope` y `RecommendationType` se quitan los espacios iniciales y finales. Un dato vacío o sólo de espacios equivale a omitirlo. El parámetro `filter` de los demás GET no aplica a estos recursos y se ignora.
+- **Cada dato se envía una sola vez.** `RecommendationType` repetido responde **400**, aunque uno de los valores venga vacío; los demás datos conservan el primer valor recibido.
+- **La respuesta es de página única:** `MoreData` siempre en `false` y `PageNumber` sólo admite `1`.
+- **El 400 responde con `succeeded` y `Message`**, no con la propiedad `errors` de los demás recursos, y nombra una sola causa.
+- **Propiedades ausentes:** no llevan `TotalCount`, `PagingError` ni `OrderError`.
+- **Sólo se devuelven artículos que tengan marcada la opción Publica en Tango eCommerce** en el proceso Stock › Archivos › Actualizaciones › [*Artículos*](https://ayudas.axoft.com/26ar/ayudas/st/archivos_carp_st/actualizacion_carp_st/articulo_carp_st/). Las demás condiciones se detallan en [el catálogo de eCommerce](#aicatalogo).
+- **Cada consulta tiene una espera máxima para las llamadas al modelo.** Al vencer, la respuesta es **504** con `succeeded: false` y el mensaje que pide reintentar.
+- **Las respuestas llevan `Cache-Control: no-store`**, salvo el **401** por credenciales ausentes o inválidas, que se emite antes de ejecutar el recurso (ver [Códigos de estado HTTP](#status)).
 
 <a name="migracion"></a>
 

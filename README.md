@@ -660,7 +660,7 @@ PaidTotal = ∑(Payments.Total) + ∑(CashPayments.PaymentTotal)
 | `DocumentNumber` | No | Alfanumérico | Número de documento sin símbolos. |
 | `IVACategoryCode` | Sí | Alfanumérico | Categoría de IVA. Ver [Condición Fiscal](#cfiscal). |
 | `User` | Sí | Alfanumérico (≤200) | Usuario de la tienda. |
-| `Email` | Sí | Alfanumérico (≤255) | Correo electrónico. |
+| `Email` | Sí | Alfanumérico (≤255) | Dirección de correo electrónico. Debe cumplir con un formato válido (ej.: usuario@dominio.com) |
 | `ProvinceCode` | Sí | Alfanumérico (≤4) | Código AFIP de la provincia. Ver [Provincias](#provincias). |
 | `FirstName` | No | Alfanumérico (≤200) | Nombre. |
 | `LastName` | No | Alfanumérico | Apellido. |
